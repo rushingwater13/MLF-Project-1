@@ -8,12 +8,12 @@ from keras import layers
 from keras import models
 
 # Read in the data, don't forget to capture the first row
-data = pd.read_csv("Gaussian 2D Wide.csv", header=None)
+data = pd.read_csv("Gaussian 3D Wide.csv", header=None)
 data = data.values
 
 # Divide the classes
-class0 = data[:, 0:2]
-class1 = data[:, 2:4]
+class0 = data[:, 0:3]
+class1 = data[:, 3:6]
 
 # Combine the classes into one array
 X = np.vstack((class0, class1))
@@ -58,7 +58,7 @@ X_train, X_val, y_train, y_val = train_test_split(
 # ReLU in the hidden layer because the data set is needs curvature
 # Sigmoid for the output layer because this is binary classification
 model = models.Sequential([
-    layers.Dense(units=16, activation='relu', input_shape=(2,)),
+    layers.Dense(units=16, activation='relu', input_shape=(3,)),
     layers.Dense(1, activation='sigmoid')
 ])
 
@@ -77,7 +77,7 @@ model.compile(
 # Train the model
 model.fit(X_train, 
     y_train, 
-    epochs=100, 
+    epochs=200, 
     validation_data=(X_val, y_val)
 )
 
