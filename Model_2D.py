@@ -7,9 +7,49 @@ import keras
 from keras import layers
 from keras import models
 
-# Read in the data, don't forget to capture the first row
-data = pd.read_csv("Moons 2D Overlap.csv", header=None)
-data = data.values
+# # Read in the data, don't forget to capture the first row
+# data = pd.read_csv("Gaussian 2D Wide.csv", header=None)
+# #data = pd.read_csv("Moons 2D Overlap.csv", header=None)
+# data = data.values
+
+g_2_w = pd.read_csv("Gaussian 2D Wide.csv", header=None).values
+g_2_n = pd.read_csv("Gaussian 2D Narrow.csv", header=None).values
+g_2_o = pd.read_csv("Gaussian 2D Overlap.csv", header=None).values
+m_2_w = pd.read_csv("Moons 2D Wide.csv", header=None).values
+m_2_n = pd.read_csv("Moons 2D Narrow.csv", header=None).values
+m_2_o = pd.read_csv("Moons 2D Overlap.csv", header=None).values
+
+
+g_or_m = input("Choose the type Gaussian or Moon. g = Gaussian, m = Moon :  ")
+data_choice = input("Choose which data to use. w = wide, n = narrow, o = overlap :  ")
+
+match g_or_m:
+    case "g":
+        match data_choice:
+            case "w":
+                data = g_2_w
+            case "n": 
+                data = g_2_n
+            case "o": 
+                data = g_2_o
+            case _:
+                raise ValueError("Invalid Data choice")
+    
+    case "m":
+        match data_choice:
+            case "w":
+                data = m_2_w
+            case "n":
+                data = m_2_n
+            case "o":
+                data = m_2_o
+            case _:
+                raise ValueError("Invalid Data choice")
+    case _:
+        raise ValueError("Invalid Type choice")
+
+
+
 
 # Divide the classes
 class0 = data[:, 0:2]
@@ -33,59 +73,79 @@ print(len(y))
 print(X.shape)
 print(y.shape)
 
+runs = 30
+epochs = 200
+accu_values = []
+loss_values = []
+
+for seed in range(runs):
+    print(f"---------Starting Run : {seed} -----------")
+    # Divide into train + validate and test
+    X_temp, X_test, y_temp, y_test = train_test_split(
+        X, y,
+        test_size=0.2,
+        random_state=seed,
+        stratify=y
+    )
+
+    # Now divide into train and validate
+    X_train, X_val, y_train, y_val = train_test_split(
+        X_temp, y_temp,
+        test_size=0.25,
+        random_state=seed,
+        stratify=y_temp
+    )
+
+    # Set up the model, using tensorflow keras
+    # Sequential because Feed Forward
+    # ReLU in the hidden layer because the data set is needs curvature
+    # Sigmoid for the output layer because this is binary classification
+    model = models.Sequential([
+        layers.Dense(units=16, activation='relu', input_shape=(2,)),
+        layers.Dense(1, activation='sigmoid')
+    ])
+
+    # Compile the model
+    # Adam optimizer for gradient descent, seems liek the default
+    # Binary Crossentropy because binary classification
+
+    model.compile(
+        optimizer='adam',
+        loss='binary_crossentropy',
+        metrics=['accuracy']
+    )
 
 
-# Divide into train + validate and test
-X_temp, X_test, y_temp, y_test = train_test_split(
-    X, y,
-    test_size=0.2,
-    random_state=42,
-    stratify=y
-)
-
-# Now divide into train and validate
-X_train, X_val, y_train, y_val = train_test_split(
-    X_temp, y_temp,
-    test_size=0.25,
-    random_state=42,
-    stratify=y_temp
-)
+    # Train the model
+    model.fit(X_train, 
+        y_train, 
+        epochs=epochs, 
+        validation_data=(X_val, y_val)
+    )
 
 
-
-# Set up the model, using tensorflow keras
-# Sequential because Feed Forward
-# ReLU in the hidden layer because the data set is needs curvature
-# Sigmoid for the output layer because this is binary classification
-model = models.Sequential([
-    layers.Dense(units=16, activation='relu', input_shape=(2,)),
-    layers.Dense(1, activation='sigmoid')
-])
+    # Evaluate the model on the test data
+    loss, accu = model.evaluate(X_test, y_test)
+    accu_values.append(accu)
+    loss_values.append(loss)
 
 
-# Compile the model
-# Adam optimizer for gradient descent, seems liek the default
-# Binary Crossentropy because binary classification
+test_accs = np.array(accu_values)
+test_losses = np.array(loss_values)
 
-model.compile(
-    optimizer='adam',
-    loss='binary_crossentropy',
-    metrics=['accuracy']
-)
+print(f"Runs: {runs}")
+print(f"Test accuracy: mean={test_accs.mean():.4f}, std={test_accs.std(ddof=1):.4f}, "
+      f"min={test_accs.min():.4f}, max={test_accs.max():.4f}")
+print(f"Test loss:     mean={test_losses.mean():.4f}, std={test_losses.std(ddof=1):.4f}")
 
-
-# Train the model
-model.fit(X_train, 
-    y_train, 
-    epochs=200, 
-    validation_data=(X_val, y_val)
-)
-
-
-# Evaluate the model on the test data
-results = model.evaluate(X_test, y_test)
-
-print(results)
+with open(g_or_m + "_2_" + data_choice + ".txt", "w") as f:
+    f.write("Experiment Results\n")
+    f.write(f"Runs: {runs}\n")
+    f.write(f"epochs per run: {epochs}\n")
+    f.write(f"Accuracy mean: {test_accs.mean():.4f}\n")
+    f.write(f"Accuracy std: {test_accs.std(ddof=1):.4f}\n")
+    f.write(f"Loss mean: {test_losses.mean():.4f}\n")
+    f.write(f"Loss std: {test_losses.std(ddof=1):.4f}\n")
 
 # what kind of data do we need to report?
 # so confusion matrix
