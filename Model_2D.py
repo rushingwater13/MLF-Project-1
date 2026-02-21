@@ -108,7 +108,6 @@ for seed in range(runs):
     # Compile the model
     # Adam optimizer for gradient descent, seems liek the default
     # Binary Crossentropy because binary classification
-
     model.compile(
         optimizer='adam',
         loss='binary_crossentropy',
