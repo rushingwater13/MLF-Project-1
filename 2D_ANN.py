@@ -72,15 +72,15 @@ print(f"epoch = {epoch-1}")
 print(f"final weight vector = {w_v}")
 
 # Extract columns
-class1_x = data.iloc[:, 0]
-class1_y = data.iloc[:, 1]
-class2_x = data.iloc[:, 2]
-class2_y = data.iloc[:, 3]
+class0_x = data.iloc[:, 0]
+class0_y = data.iloc[:, 1]
+class1_x = data.iloc[:, 2]
+class1_y = data.iloc[:, 3]
 
 # Create scatter plot
 plt.figure()
-plt.scatter(class1_x, class1_y, marker='o', label='Class 1')
-plt.scatter(class2_x, class2_y, marker='x', label='Class 2')
+plt.scatter(class0_x, class0_y, marker='o', label='Class 0')
+plt.scatter(class1_x, class1_y, marker='x', label='Class 1')
 
 # weights: [bias, w1, w2]
 w0, w1, w2 = w_v
@@ -94,17 +94,17 @@ x_line = np.linspace(x_min, x_max, 200)
 if abs(w2) < 1e-12:
     # vertical boundary: w0 + w1*x = 0 -> x = -w0/w1
     x_boundary = -w0 / w1
-    plt.axvline(x_boundary)
+    plt.axvline(x_boundary, color = "tab:orange")
 else:
     y_line = -(w0 + w1 * x_line) / w2
-    plt.plot(x_line, y_line)
+    plt.plot(x_line, y_line, color = "tab:orange")
 
 # Labels and legend
 plt.xlabel('X')
 plt.ylabel('Y')
-plt.title('Class 1 vs Class 2 Data')
-plt.legend()
+plt.title('Class 0 vs Class 1, Learning rate = ' + str(learning_rate) + " Bias = " + str(bias))
+plt.legend()  
 
-plt.savefig(data_choice + ".png")
-print("Plot saved as : " + data_choice + ".png")
+plt.savefig("g_2_" + data_choice + ".png")
+print("Plot saved as : " + "g_2_" + data_choice + ".png")
 

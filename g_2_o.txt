@@ -1,7 +1,7 @@
 Experiment Results
 Runs: 30
 epochs per run: 200
-Accuracy mean: 0.6567
-Accuracy std: 0.1025
-Loss mean: 0.6301
-Loss std: 0.0300
+Accuracy mean: 0.6983
+Accuracy std: 0.1242
+Loss mean: 0.6139
+Loss std: 0.0346

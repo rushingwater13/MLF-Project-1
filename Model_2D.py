@@ -83,7 +83,7 @@ for seed in range(runs):
     # Divide into train + validate and test
     X_temp, X_test, y_temp, y_test = train_test_split(
         X, y,
-        test_size=0.2,
+        test_size=0.1,
         random_state=seed,
         stratify=y
     )
@@ -91,7 +91,7 @@ for seed in range(runs):
     # Now divide into train and validate
     X_train, X_val, y_train, y_val = train_test_split(
         X_temp, y_temp,
-        test_size=0.25,
+        test_size=1/9,
         random_state=seed,
         stratify=y_temp
     )
