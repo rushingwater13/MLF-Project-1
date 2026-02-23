@@ -6,6 +6,8 @@ import tensorflow as tf
 import keras
 from keras import layers
 from keras import models
+from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
+import matplotlib.pyplot as plt
 
 # # Read in the data, don't forget to capture the first row
 # data = pd.read_csv("Gaussian 2D Wide.csv", header=None)
@@ -77,6 +79,7 @@ runs = 30
 epochs = 200
 accu_values = []
 loss_values = []
+totalcm = np.zeros((2,2),dtype = int)
 
 for seed in range(runs):
     print(f"---------Starting Run : {seed} -----------")
@@ -128,6 +131,12 @@ for seed in range(runs):
     accu_values.append(accu)
     loss_values.append(loss)
 
+    #Keras output for sigmoid, round to match true label
+    y_pred_probs = model.predict(X_test)
+    y_pred = (y_pred_probs > 0.5).astype(int)
+
+    conf = confusion_matrix(y_test,y_pred)
+    totalcm += conf
 
 test_accs = np.array(accu_values)
 test_losses = np.array(loss_values)
@@ -148,9 +157,15 @@ with open(g_or_m + "_2_" + data_choice + ".txt", "w") as f:
 
 # what kind of data do we need to report?
 # so confusion matrix
+disp = ConfusionMatrixDisplay(confusion_matrix=totalcm, display_labels=["Class 0","Class 1"])
+disp.plot(cmap=plt.cm.Blues)
 
+# Show the plot
+plt.title("Confusion Matrix")
+plt.show()
 
 
 # https://www.tensorflow.org/tutorials/quickstart/beginner
 # https://www.freecodecamp.org/news/binary-classification-made-simple-with-tensorflow/
 # https://keras.io/guides/training_with_built_in_methods/
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
