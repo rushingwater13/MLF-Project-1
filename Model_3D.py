@@ -96,9 +96,9 @@ for seed in range(runs):
     model.fit(X_train, 
         y_train, 
         epochs=epochs, 
-        validation_data=(X_val, y_val)
+        validation_data=(X_val, y_val),
+        verbose = 0
     )
-
 
     # Evaluate the model on the test data
     loss, accu = model.evaluate(X_test, y_test)

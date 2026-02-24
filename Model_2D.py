@@ -21,7 +21,6 @@ m_2_w = pd.read_csv("Moons 2D Wide.csv", header=None).values
 m_2_n = pd.read_csv("Moons 2D Narrow.csv", header=None).values
 m_2_o = pd.read_csv("Moons 2D Overlap.csv", header=None).values
 
-
 g_or_m = input("Choose the type Gaussian or Moon. g = Gaussian, m = Moon :  ")
 data_choice = input("Choose which data to use. w = wide, n = narrow, o = overlap :  ")
 
@@ -49,9 +48,6 @@ match g_or_m:
                 raise ValueError("Invalid Data choice")
     case _:
         raise ValueError("Invalid Type choice")
-
-
-
 
 # Divide the classes
 class0 = data[:, 0:2]
@@ -117,14 +113,13 @@ for seed in range(runs):
         metrics=['accuracy']
     )
 
-
     # Train the model
     model.fit(X_train, 
         y_train, 
         epochs=epochs, 
-        validation_data=(X_val, y_val)
+        validation_data=(X_val, y_val),
+        verbose = 0
     )
-
 
     # Evaluate the model on the test data
     loss, accu = model.evaluate(X_test, y_test)
