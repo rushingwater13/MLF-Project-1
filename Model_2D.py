@@ -9,11 +9,11 @@ from keras import models
 from sklearn.metrics import confusion_matrix, ConfusionMatrixDisplay
 import matplotlib.pyplot as plt
 
-# # Read in the data, don't forget to capture the first row
-# data = pd.read_csv("Gaussian 2D Wide.csv", header=None)
-# #data = pd.read_csv("Moons 2D Overlap.csv", header=None)
-# data = data.values
 
+
+# ------------------ Data Wrangling ------------------ #
+
+# Read in the data, don't forget to capture the first row
 g_2_w = pd.read_csv("Gaussian 2D Wide.csv", header=None).values
 g_2_n = pd.read_csv("Gaussian 2D Narrow.csv", header=None).values
 g_2_o = pd.read_csv("Gaussian 2D Overlap.csv", header=None).values
@@ -21,6 +21,7 @@ m_2_w = pd.read_csv("Moons 2D Wide.csv", header=None).values
 m_2_n = pd.read_csv("Moons 2D Narrow.csv", header=None).values
 m_2_o = pd.read_csv("Moons 2D Overlap.csv", header=None).values
 
+# Capture user input on the specific data set to use
 g_or_m = input("Choose the type Gaussian or Moon. g = Gaussian, m = Moon :  ")
 data_choice = input("Choose which data to use. w = wide, n = narrow, o = overlap :  ")
 
@@ -66,10 +67,12 @@ y = np.concatenate((y_class0, y_class1))
 # Shuffle to distribute the data
 X, y = shuffle(X, y, random_state=42)
 
-print(len(X))
-print(len(y))
-print(X.shape)
-print(y.shape)
+
+
+# -------------------------- Begin the Model! -------------------------- #
+# We learned how to build this model from the following websites:
+# https://www.tensorflow.org/tutorials/quickstart/beginner
+# https://www.freecodecamp.org/news/binary-classification-made-simple-with-tensorflow/
 
 runs = 30
 epochs = 200
@@ -77,6 +80,8 @@ accu_values = []
 loss_values = []
 totalcm = np.zeros((2,2),dtype = int)
 
+# Repeat the building, training, validating, and testing of the model with a different seed 
+# runs numbers of times to confirm the consistency of the model
 for seed in range(runs):
     print(f"---------Starting Run : {seed} -----------")
     # Divide into train + validate and test
@@ -97,7 +102,7 @@ for seed in range(runs):
 
     # Set up the model, using tensorflow keras
     # Sequential because Feed Forward
-    # ReLU in the hidden layer because the data set is needs curvature
+    # ReLU in the hidden layer because the data set needs curvature
     # Sigmoid for the output layer because this is binary classification
     model = models.Sequential([
         layers.Dense(units=16, activation='relu', input_shape=(2,)),
@@ -117,6 +122,7 @@ for seed in range(runs):
     model.fit(X_train, 
         y_train, 
         epochs=epochs, 
+        # The following line specifically came from this website: https://keras.io/guides/training_with_built_in_methods/
         validation_data=(X_val, y_val),
         verbose = 0
     )
@@ -133,9 +139,13 @@ for seed in range(runs):
     conf = confusion_matrix(y_test,y_pred)
     totalcm += conf
 
+
+
+# ----------------- Model Performance Data ----------------- #
 test_accs = np.array(accu_values)
 test_losses = np.array(loss_values)
 
+# Calculate the averages across the runs and report them
 print(f"Runs: {runs}")
 print(f"Test accuracy: mean={test_accs.mean():.4f}, std={test_accs.std(ddof=1):.4f}, "
       f"min={test_accs.min():.4f}, max={test_accs.max():.4f}")
@@ -150,17 +160,65 @@ with open(g_or_m + "_2_" + data_choice + ".txt", "w") as f:
     f.write(f"Loss mean: {test_losses.mean():.4f}\n")
     f.write(f"Loss std: {test_losses.std(ddof=1):.4f}\n")
 
-# what kind of data do we need to report?
-# so confusion matrix
+
+# Build the confusion matrix
+# We learned the basics of this from the following website:
+# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
 disp = ConfusionMatrixDisplay(confusion_matrix=totalcm, display_labels=["Class 0","Class 1"])
 disp.plot(cmap=plt.cm.Blues)
 
+# Determine the data set for a nice title on the plots
+title_option = ""
+if g_or_m == "g" and data_choice == "w":
+    title_option = "Gaussian 2D Wide" 
+elif g_or_m == "g" and data_choice == "n":
+    title_option = "Gaussian 2D Narrow"
+elif g_or_m == "g" and data_choice == "o":
+    title_option = "Gaussian 2D Overlap"
+elif g_or_m == "m" and data_choice == "w":
+    title_option = "Crescent Moon Wide"
+elif g_or_m == "m" and data_choice == "n":
+    title_option = "Crescent Moon Narrow"
+elif g_or_m == "m" and data_choice == "o":
+    title_option = "Crescent Moon Overlap"
+
+
 # Show the plot
-plt.title("Confusion Matrix")
-plt.show()
+plt.title("Confusion Matrix for " + title_option + " Data Set")
+plt.savefig(g_or_m + "_" + data_choice + "2D_CM.png")
 
 
-# https://www.tensorflow.org/tutorials/quickstart/beginner
-# https://www.freecodecamp.org/news/binary-classification-made-simple-with-tensorflow/
-# https://keras.io/guides/training_with_built_in_methods/
-# https://scikit-learn.org/stable/modules/generated/sklearn.metrics.confusion_matrix.html
+
+# ----------------- Decision Boundary Graph ----------------- #
+# Graph the points with the decision boundary
+# This is using the last repetition of the model
+# Using the code found at this website: 
+# https://jonchar.net/notebooks/Artificial-Neural-Network-with-Keras/
+
+# Create a mesh grid of points to try to find the boundary
+x_min, x_max = X[:, 0].min() - 1, X[:, 0].max() + 1
+y_min, y_max = X[:, 1].min() - 1, X[:, 1].max() + 1
+
+x_span = np.linspace(x_min, x_max, 300)
+y_span = np.linspace(y_min, y_max, 300)
+
+xx, yy = np.meshgrid(x_span, y_span)
+
+grid = np.c_[xx.ravel(), yy.ravel()]
+
+# Use the model to predict the classifications for the dummy points
+Z = model.predict(grid)
+Z = Z.reshape(xx.shape)
+
+# Plot the boundary and the points
+# This part is different from the source, following what we already knew
+plt.figure()
+plt.contourf(xx, yy, Z, levels=50, alpha=0.3)
+plt.contour(xx, yy, Z, levels=[0.5])
+plt.scatter(class0[:, 0], class0[:, 1], marker='o', label='Class 0')
+plt.scatter(class1[:, 0], class1[:, 1], marker='x', label='Class 1')
+
+
+plt.title("Decision Boundary for " + title_option + " Data Set")
+plt.savefig(g_or_m + "_" + data_choice + "2D_DB.png")
+
